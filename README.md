@@ -21,23 +21,23 @@
     </ul>
   </section>
 
-  <section class="technologies">
-    <h2>Technologies Used</h2>
-    <ul>
-      <li>Java</li>
-      <li>Spring Framework</li>
-      <li>SQL</li>
-      <li>React</li>
-      <li>Next.js</li>
-      <li>HTML</li>
-      <li>CSS</li>
-    </ul>
-  </section>
+<section class="technologies">
+  <h2>Technologies Used</h2>
+  <ul>
+    <li><a href="https://www.java.com" target="_blank">Java</a></li>
+    <li><a href="https://spring.io" target="_blank">Spring Framework</a></li>
+    <li><a href="https://www.mysql.com" target="_blank">SQL</a></li>
+    <li><a href="https://reactjs.org" target="_blank">React</a></li>
+    <li><a href="https://nextjs.org" target="_blank">Next.js</a></li>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank">HTML</a></li>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank">CSS</a></li>
+  </ul>
+</section>
 
   <section class="installation">
     <h2>Installation</h2>
     <ol>
-      <li>Clone the repository: `git clone https://github.com/your-username/your-repository.git `</li>
+      <li>Clone the repository: `git clone https://github.com/NRabello/projeto-es3.git `</li>
       <li>Install dependencies for backend and frontend: `npm install`</li>
       <li>Start the backend server: `mvn spring-boot:run`</li>
       <li>Start the frontend server: `npm run dev`</li>
@@ -45,9 +45,9 @@
     </ol>
   </section>
 
-  <section class="license">
-    <h2>License</h2>
-    <p>This project is licensed under the MIT License - see the <a href="LICENSE">LICENSE</a> file for details.</p>
+  <section class="contact">
+    <h2>Contact</h2>
+    <p>For inquiries and feedback, please feel free to contact me at: <a href="mailto:nic.rabello@gmail.com">nic.rabello@gmail.com</a></p>
   </section>
 </body>
 </html>
