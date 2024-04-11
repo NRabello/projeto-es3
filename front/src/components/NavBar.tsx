@@ -11,10 +11,10 @@ export default function NavBar() {
     };
 
     return (
-        <nav className="bg-teal-500 border-gray-700 h-16 border-y">
+        <nav className="bg-black h-16">
             <div className="max-w-fit flex flex-wrap items-center justify-center mx-auto p-4 h-full cursor cursor-pointer">
                 <a onClick={() => router.push("/") } className="flex items-center space-x-3 rtl:space-x-reverse">
-                    <span className="self-center text-3xl font-semibold whitespace-nowrap text-teal-900">Livros</span>
+                    <span className="self-center text-3xl font-semibold whitespace-nowrap text-white">Home</span>
                 </a>
             </div>
         </nav>
