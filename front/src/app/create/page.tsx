@@ -1,30 +1,103 @@
 "use client"
-import { ChangeEvent, FormEvent, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import { PricingGroupService } from '@/services/PricingGroupService';
 import { useRouter } from 'next/navigation';
 import { Book } from '@/models/Book';
+import { Author } from '@/models/Author';
+import { Dimension } from '@/models/Dimension';
+import { PricingGroup } from '@/models/PricingGroup';
+import { PublishingCompany } from '@/models/PublishingCompany';
+import { Category } from '@/models/Category';
+import { CategoryService } from '@/services/CategoryService';
+import { BookService } from '@/services/BookService';
 
 export default function BookFormCreate() {
-  const [bookData, setBookData] = useState<Book>(new Book({}))
+  const [bookData, setBookData] = useState<Book>(new Book());
+  const [pricingGroups, setPricingGroups] = useState<PricingGroup[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const pricingGroupService = new PricingGroupService();
+  const categoryService = new CategoryService();
+  const bookService = new BookService();
   const router = useRouter();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    setBookData(prevState => ({ ...prevState, [name]: value }));
+  };
+
+  const handleAuthorChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setBookData(prevState => ({
       ...prevState,
-      [name]: value
-    }as Book));
+      author: { ...prevState.author, [name]: value } as Author
+    }));
   };
+
+  const handlePublishingCompanyChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setBookData(prevState => ({
+      ...prevState,
+      publishingCompany: { ...prevState.publishingCompany, [name]: value } as PublishingCompany
+    }));
+  };
+
+  const handleDimensionsChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setBookData(prevState => ({
+      ...prevState,
+      dimensions: { ...prevState.dimensions, [name]: value } as Dimension
+    }));
+  };
+
+  const handlePricingGroupChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    const selectedPricingGroup = pricingGroups.find(pg => pg.name === value);
+    setBookData(prevState => ({
+      ...prevState,
+      pricingGroup: selectedPricingGroup as PricingGroup
+    }));
+  };
+
+  const handleCategoryChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { value, checked } = e.target;
+    setBookData(prevState => {
+      const updatedCategories = checked
+        ? [...(prevState.categories || []), { id: parseInt(value), name: e.target.name } as Category]
+        : (prevState.categories || []).filter(category => category.id !== parseInt(value));
+      return { ...prevState, categories: updatedCategories };
+    });
+  };
+
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    alert(`Livro ${bookData.title} salvo com sucesso!`)
-    router.push("/");
+    if ((bookData.categories || []).length === 0) {
+      alert("Selecione ao menos uma categoria.");
+      return;
+    }
+    try {
+      bookService.save(bookData).then(() => {
+        alert(`Livro ${bookData.title} salvo com sucesso!`);
+        router.push("/");
+      });
+    } catch (error) {
+      alert(`Erro ao salvar o livro ${bookData.title}: ${error}`);
+    }
   };
+
+  useEffect(() => {
+    pricingGroupService.findAll().then((response) => {
+      setPricingGroups(response.data);
+    });
+    categoryService.findAll().then((response) => {
+      setCategories(response.data);
+    });
+  }, []);
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="space-y-12 py-12 px-96 bg-gradient-to-r from-pink-600 to-cyan-700">
+      <div className="space-y-12 py-12 px-96 bg-gradient-to-r from-gray-900 to-gray-600">
         <div className="bg-white pb-12 py-2 px-12 shadow-2xl">
-          <h1 className="mx-auto mt-2 w-fit h-8 bg-clip-text text-transparent bg-gradient-to-r from-pink-600/80 to-cyan-700/90 text-3xl text-center font-semibold leading-7 ">Book Registration</h1>
+          <h1 className="mx-auto mt-2 w-fit h-8 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 text-3xl text-center font-semibold leading-7">Book Registration</h1>
           <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
             <div className="sm:col-span-4">
               <label htmlFor="title" className="block text-sm font-medium leading-6 text-gray-900">
@@ -37,37 +110,47 @@ export default function BookFormCreate() {
                 value={bookData.title}
                 onChange={handleChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
-            <div className="sm:col-span-2">
-              <label htmlFor="category" className="block text-sm font-medium leading-6 text-gray-900">
-                Category <span className="text-red-600">*</span>
+            <div className="sm:col-span-6">
+              <label htmlFor="categories" className="block text-sm font-medium leading-6 text-gray-900">
+                Categories <span className="text-red-600">*</span>
               </label>
-              <input
-                type="text"
-                name="category"
-                id="category"
-                value={bookData.category}
-                onChange={handleChange}
-                required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
-              />
+              <details className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 sm:text-sm sm:leading-6">
+                <summary className="cursor-pointer">{(bookData.categories || []).map(category => category.name).join(', ')}</summary>
+                <div className="mt-2">
+                  {categories.map((category) => (
+                    <div key={category.id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`category-${category.id}`}
+                        name={category.name}
+                        value={category.id}
+                        checked={(bookData.categories || []).some(cat => cat.id === category.id)}
+                        onChange={handleCategoryChange}
+                        className="mr-2"
+                      />
+                      <label htmlFor={`category-${category.id}`} className="text-sm text-gray-900">{category.name}</label>
+                    </div>
+                  ))}
+                </div>
+              </details>
             </div>
 
             <div className="sm:col-span-4">
-              <label htmlFor="author" className="block text-sm font-medium leading-6 text-gray-900">
+              <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">
                 Author <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
-                name="author"
-                id="author"
-                value={bookData.author}
-                onChange={handleChange}
+                name="name"
+                id="author.name"
+                value={bookData.author?.name || ''}
+                onChange={handleAuthorChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
@@ -82,22 +165,22 @@ export default function BookFormCreate() {
                 value={bookData.year}
                 onChange={handleChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
             <div className="sm:col-span-4">
-              <label htmlFor="publisher" className="block text-sm font-medium leading-6 text-gray-900">
+              <label htmlFor="name" className="block text-sm font-medium leading-6 text-gray-900">
                 Publisher <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
-                name="publisher"
-                id="publisher"
-                value={bookData.publisher}
-                onChange={handleChange}
+                name="name"
+                id="publishingCompany.name"
+                value={bookData.publishingCompany?.name || ''}
+                onChange={handlePublishingCompanyChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
@@ -112,7 +195,7 @@ export default function BookFormCreate() {
                 value={bookData.acquisitionValue}
                 onChange={handleChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
@@ -127,37 +210,37 @@ export default function BookFormCreate() {
                 value={bookData.edition}
                 onChange={handleChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="ISBN" className="block text-sm font-medium leading-6 text-gray-900">
+              <label htmlFor="isbn" className="block text-sm font-medium leading-6 text-gray-900">
                 ISBN <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
-                name="ISBN"
-                id="ISBN"
-                value={bookData.ISBN}
+                name="isbn"
+                id="isbn"
+                value={bookData.isbn}
                 onChange={handleChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="numPages" className="block text-sm font-medium leading-6 text-gray-900">
+              <label htmlFor="pages" className="block text-sm font-medium leading-6 text-gray-900">
                 Number of Pages <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
-                name="numPages"
-                id="numPages"
-                value={bookData.numPages}
+                name="pages"
+                id="pages"
+                value={bookData.pages}
                 onChange={handleChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
@@ -172,7 +255,7 @@ export default function BookFormCreate() {
                 value={bookData.synopsis}
                 onChange={handleChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
@@ -183,11 +266,11 @@ export default function BookFormCreate() {
               <input
                 type="text"
                 name="height"
-                id="height"
-                value={bookData.height}
-                onChange={handleChange}
+                id="dimensions.height"
+                value={bookData.dimensions?.height || ''}
+                onChange={handleDimensionsChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
@@ -198,11 +281,11 @@ export default function BookFormCreate() {
               <input
                 type="text"
                 name="width"
-                id="width"
-                value={bookData.width}
-                onChange={handleChange}
+                id="dimensions.width"
+                value={bookData.dimensions?.width || ''}
+                onChange={handleDimensionsChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
@@ -213,11 +296,11 @@ export default function BookFormCreate() {
               <input
                 type="text"
                 name="weight"
-                id="weight"
-                value={bookData.weight}
-                onChange={handleChange}
+                id="dimensions.weight"
+                value={bookData.dimensions?.weight || ''}
+                onChange={handleDimensionsChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
@@ -228,27 +311,31 @@ export default function BookFormCreate() {
               <input
                 type="text"
                 name="depth"
-                id="depth"
-                value={bookData.depth}
-                onChange={handleChange}
+                id="dimensions.depth"
+                value={bookData.dimensions?.depth || ''}
+                onChange={handleDimensionsChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
             <div className="sm:col-span-6">
-              <label htmlFor="priceGroup" className="block text-sm font-medium leading-6 text-gray-900">
-                Price Group <span className="text-red-600">*</span>
+              <label htmlFor="pricingGroup" className="block text-sm font-medium leading-6 text-gray-900">
+                Pricing Group <span className="text-red-600">*</span>
               </label>
-              <input
-                type="text"
-                name="priceGroup"
-                id="priceGroup"
-                value={bookData.priceGroup}
-                onChange={handleChange}
+              <select
+                name="pricingGroup"
+                id="pricingGroup"
+                value={bookData.pricingGroup?.name || ''}
+                onChange={handlePricingGroupChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
-              />
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+              >
+                <option value="">Select a Pricing Group</option>
+                {pricingGroups.map((pricingGroup) => (
+                  <option key={pricingGroup.id} value={pricingGroup.name}>{pricingGroup.name}</option>
+                ))}
+              </select>
             </div>
 
             <div className="sm:col-span-6">
@@ -262,7 +349,7 @@ export default function BookFormCreate() {
                 value={bookData.barcode}
                 onChange={handleChange}
                 required
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"
               />
             </div>
 
