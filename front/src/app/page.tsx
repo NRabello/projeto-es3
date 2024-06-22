@@ -1,18 +1,20 @@
 "use client"
-import React, { useEffect, useState } from "react";
-import books from "@/mocks/MockBooks";
-import { useRouter } from "next/navigation";
-import { Book } from "@/models/Book";
+import { ReasonActivationDeactivationService } from "@/services/ReasonActivationDeactivationService";
 import { BookService } from "@/services/BookService";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Dialog from "@/components/Dialog";
+import { Book } from "@/models/Book";
+import { ReasonActivationDeactivation } from "@/models/ReasonActivationDeactivation";
 
 export default function Home() {
   const [bookList, setBookList] = useState<Book[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [reason, setReason] = useState("");
-  const [activeBookIndex, setActiveBookIndex] = useState(-1);
+  const [selectedBook, setSelectedBook] = useState<Book>();
   const [search, setSearch] = useState("");
   const router = useRouter();
   const bookService = new BookService();
+  const reasonService = new ReasonActivationDeactivationService();
 
   useEffect(() => {
     bookService.findAll().then((response) => {
@@ -20,26 +22,41 @@ export default function Home() {
     });
   }, [search]);
 
-  const openModal = (index: number) => {
+  const openModal = (book: Book) => {
     setIsModalOpen(true);
-    setActiveBookIndex(index)
+    setSelectedBook(book);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setReason("");
   };
 
-  const changeStatus = (book: Book, index: number) => {
-    const updatedBooks = [...bookList];
-    if (book.active) {
-      updatedBooks[index].active = false;
-      alert(`Livro ${book.title} inativado com sucesso!`);
-    } else {
-      updatedBooks[index].active = true;
-      alert(`Livro ${book.title} ativado com sucesso!`);
+  const changeStatus = async (book: Book, reason: string) => {
+    try{
+      if (book.active) {
+        book.active = false;
+        await bookService.update(book);
+        await reasonService.save(new ReasonActivationDeactivation({
+          description: reason,
+          book: book,
+          type: 'desativacao'
+        })
+        );
+        alert(`Livro ${book.title} inativado com sucesso!`);
+      } else {
+        book.active = true;
+        await bookService.update(book);
+        await reasonService.save(new ReasonActivationDeactivation({
+          description: reason,
+          book: book,
+          type: 'ativacao'
+        })
+        );
+        alert(`Livro ${book.title} ativado com sucesso!`);
+      }
+    }catch(error){
+      alert("Erro ao inativar/ativar livro: " + error);
     }
-    setBookList(updatedBooks);
   };
 
   return (
@@ -83,7 +100,7 @@ export default function Home() {
                   <td className="px-6 py-4 text-white">{book.publishingCompany.name}</td>
                   <td className="px-6 py-4 text-white">{book.active ? "Active" : "Inactive"}</td>
                   <td className="px-6 py-4 text-white">
-                    <button onClick={(e) => { e.stopPropagation(); openModal(index) }} className={`px-4 py-2 ${book.active ? 'bg-red-600 hover:bg-red-500' : 'bg-green-600 hover:bg-green-500'} text-white rounded`}>
+                    <button onClick={(e) => { e.stopPropagation(); openModal(book) }} className={`px-4 py-2 ${book.active ? 'bg-red-600 hover:bg-red-500' : 'bg-green-600 hover:bg-green-500'} text-white rounded w-[100px]`}>
                       {book.active ? 'Inactivate' : 'Activate'}
                     </button>
                   </td>
@@ -93,26 +110,15 @@ export default function Home() {
           </table>
         </div>
         {isModalOpen && (
-          <div className="modal absolute inset-0 flex items-center justify-center"> {/* Posição absoluta para a modal */}
-            <div className="modal-content bg-white w-1/2 p-6 rounded-lg shadow-lg"> {/* Estilo para a modal */}
-              <span className="close absolute top-0 right-0 mt-4 mr-4 cursor-pointer" onClick={closeModal}>&times;</span>
-              <h2>Reason for {bookList[activeBookIndex].active ? "Deactivating" : "Activating"} Book</h2>
-              <input
-                type="text"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Enter reason..."
-                className="border border-gray-400 p-2 rounded-md w-full mt-2"
-              />
-              <div className="flex justify-end mt-4">
-                <button onClick={() => {
-                  closeModal();
-                  changeStatus(bookList[activeBookIndex], activeBookIndex);
-                }} className="bg-blue-600 text-white px-4 py-2 rounded-md mr-2">Confirm</button>
-                <button onClick={closeModal} className="bg-gray-400 text-gray-700 px-4 py-2 rounded-md">Cancel</button>
-              </div>
-            </div>
-          </div>
+          <Dialog
+            book={selectedBook as Book}
+            open={isModalOpen}
+            onClose={closeModal}
+            onConfirm={(reason) => {
+              closeModal();
+              changeStatus(selectedBook as Book, reason);
+            }}
+          />
         )}
       </div>
     </div>

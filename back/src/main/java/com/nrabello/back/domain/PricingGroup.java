@@ -6,7 +6,8 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity(name = "Grupos_Precificacao")
+@Entity
+@Table(name = "Grupos_Precificacao")
 public class PricingGroup {
 
     @Id
