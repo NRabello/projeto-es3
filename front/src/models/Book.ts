@@ -11,7 +11,7 @@ import { PublishingCompany } from "./PublishingCompany";
     categories?: Category[];
     year?: string;
     publishingCompany?: PublishingCompany;
-    acquisitionValue?: string;
+    value?: number;
     edition?: string;
     isbn?: string;
     pages?: string;
@@ -29,7 +29,7 @@ import { PublishingCompany } from "./PublishingCompany";
     categories: Category[];
     year: string;
     publishingCompany: PublishingCompany;
-    acquisitionValue: string;
+    value: number;
     edition: string;
     isbn: string;
     pages: string;
@@ -46,7 +46,7 @@ import { PublishingCompany } from "./PublishingCompany";
       categories = [],
       year = '',
       publishingCompany = (new PublishingCompany()),
-      acquisitionValue = '',
+      value = 0,
       edition = '',
       isbn = '',
       pages = '',
@@ -62,7 +62,7 @@ import { PublishingCompany } from "./PublishingCompany";
       this.categories = categories;
       this.year = year;
       this.publishingCompany = publishingCompany;
-      this.acquisitionValue = acquisitionValue;
+      this.value = value;
       this.edition = edition;
       this.isbn = isbn;
       this.pages = pages;

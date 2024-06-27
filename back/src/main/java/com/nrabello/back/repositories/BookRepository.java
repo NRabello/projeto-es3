@@ -11,6 +11,6 @@ import java.util.List;
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
 
-    @Query("SELECT b FROM Book b WHERE b.title LIKE %:filter% OR b.author.name like %:filter% OR b.acquisitionValue like %:filter% OR b.year like %:filter% and b.active = true")
-    List<Book> findAllByTitleOrAuthorNameOrAcquisitionValueOrYearAndActive(@Param("filter") String filter);
+    @Query("SELECT b FROM Book b WHERE b.title LIKE %:filter% OR b.author.name like %:filter% OR b.year like %:filter% and b.active = true")
+    List<Book> findAllByTitleOrAuthorNameOrYearAndActive(@Param("filter") String filter);
 }

@@ -70,19 +70,44 @@ export default function BookFormCreate() {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if ((bookData.categories || []).length === 0) {
-      alert("Selecione ao menos uma categoria.");
-      return;
-    }
     try {
-      bookService.save(bookData).then(() => {
-        alert(`Livro ${bookData.title} salvo com sucesso!`);
-        router.push("/");
-      });
+      if (validateBook()) {
+        bookService.save(bookData).then(() => {
+          alert(`Livro ${bookData.title} salvo com sucesso!`);
+          router.push("/");
+        });
+      }
     } catch (error) {
       alert(`Erro ao salvar o livro ${bookData.title}: ${error}`);
     }
   };
+
+  const validateBook = () => {
+    if ((bookData.categories).length === 0) {
+      alert("Selecione ao menos uma categoria.");
+      return false;
+    }
+
+    const isPriceValid = () => {
+      switch (bookData.pricingGroup.id) {
+        case 1:
+          return bookData.value >= 1 && bookData.value <= 20;
+        case 2:
+          return bookData.value > 20 && bookData.value <= 50;
+        case 3:
+          return bookData.value > 50;
+        default:
+          throw new Error("Invalid pricing group ID");
+      }
+    }
+
+
+    if (!isPriceValid()) {
+      alert("Preço inválido para o grupo de precificação.");
+      return false;
+    }
+    return true;
+  }
 
   useEffect(() => {
     pricingGroupService.findAll().then((response) => {
@@ -97,7 +122,7 @@ export default function BookFormCreate() {
     <form onSubmit={handleSubmit}>
       <div className="space-y-12 py-12 px-96 bg-gradient-to-r from-gray-900 to-gray-600">
         <div className="bg-white pb-12 py-2 px-12 shadow-2xl">
-          <h1 className="mx-auto mt-2 w-fit h-8 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 text-3xl text-center font-semibold leading-7">Book Registration</h1>
+          <h1 className="mx-auto mt-2 w-fit h-8 bg-clip-text text-transparent bg-black text-3xl text-center font-semibold leading-7">Book Registration</h1>
           <div className="mt-4 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
             <div className="sm:col-span-4">
               <label htmlFor="title" className="block text-sm font-medium leading-6 text-gray-900">
@@ -185,14 +210,14 @@ export default function BookFormCreate() {
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="acquisitionValue" className="block text-sm font-medium leading-6 text-gray-900">
+              <label htmlFor="value" className="block text-sm font-medium leading-6 text-gray-900">
                 Acquisition Value <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
-                name="acquisitionValue"
-                id="acquisitionValue"
-                value={bookData.acquisitionValue}
+                name="value"
+                id="value"
+                value={bookData.value}
                 onChange={handleChange}
                 required
                 className="block w-full rounded-md border-0 py-1.5 px-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 sm:text-sm sm:leading-6"

@@ -27,8 +27,8 @@ public class Book {
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name="liv_edi_id", referencedColumnName = "edi_id")
     private PublishingCompany publishingCompany;
-    @Column(name="liv_valorAquisicao")
-    private String acquisitionValue;
+    @Column(name="liv_valor")
+    private Double value;
     @Column(name="liv_edicao")
     private String edition;
     @Column(name="liv_isbn")
@@ -50,11 +50,11 @@ public class Book {
     public Book() {
     }
 
-    public Book(Long id, String title, Author author, String acquisitionValue, String synopsis, List<Category> categories, String year, PublishingCompany publishingCompany, String edition, String isbn, Integer pages, Dimension dimensions, PricingGroup pricingGroup, String barcode,Boolean active) {
+    public Book(Long id, String title, Author author, Double value, String synopsis, List<Category> categories, String year, PublishingCompany publishingCompany, String edition, String isbn, Integer pages, Dimension dimensions, PricingGroup pricingGroup, String barcode,Boolean active) {
         this.setId(id);
         this.setTitle(title);
         this.setAuthor(author);
-        this.setAcquisitionValue(acquisitionValue);
+        this.setValue(value);
         this.setSynopsis(synopsis);
         this.setCategories(categories);
         this.setYear(year);
@@ -92,12 +92,12 @@ public class Book {
         this.author = author;
     }
 
-    public String getAcquisitionValue() {
-        return acquisitionValue;
+    public Double getValue() {
+        return value;
     }
 
-    public void setAcquisitionValue(String acquisitionValue) {
-        this.acquisitionValue = acquisitionValue;
+    public void setValue(Double value) {
+        this.value = value;
     }
 
     public String getSynopsis() {

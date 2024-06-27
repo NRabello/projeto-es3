@@ -1,11 +1,12 @@
 package com.nrabello.back.database;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IDao<T> {
 
     List<T> findAll();
-    T findById(Long id);
+    Optional<T> findById(Long id);
     List<T> find(String filter);
     void save(T t);
     void update(T t);
