@@ -122,7 +122,7 @@ export default function Home() {
               </tr>
             </thead>
             <tbody>
-              {filteredBooks.map((book, index) => (
+              {filteredBooks.slice().reverse().map((book, index) => (
                 <tr onClick={() => router.push(`/update/${book.id}`)} key={index} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 cursor cursor-pointer">
                   <td className="px-6 py-4 text-white">{book.title}</td>
                   <td className="px-6 py-4 text-white">{book.author.name}</td>
